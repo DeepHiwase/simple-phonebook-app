@@ -55,13 +55,13 @@ app.get('/info', (req, res) => {
 
 app.get('/api/persons/:id', (req, res) => {
   const id = req.params.id
-  const person = persons.find(person => person.id === id)
-
-  if (person) {
-    res.json(person)
-  } else {
-    res.status(404).end()
-  }
+  Person.findById(id).then(person => {
+    if (person) {
+      res.json(person)
+    } else {
+      res.status(404).end()
+    }
+  })
 })
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -70,11 +70,6 @@ app.delete('/api/persons/:id', (req, res) => {
 
   res.status(204).end()
 })
-
-const generateId = () => {
-  const id = Math.floor(Math.random() * 999999)
-  return String(id)
-}
 
 app.post('/api/persons', (req, res) => {
   const body = req.body
@@ -85,26 +80,29 @@ app.post('/api/persons', (req, res) => {
     })
   }
 
-  const name = persons.find(person => person.name === body.name)
+  // Not working properly -> async i think
+  // const isPerson = Person.findOne({
+  //   name: body.name
+  // })
+  // console.log(isPerson)
 
-  if (name) {
-    return res.status(400).json({
-      error: 'name must be unique'
-    })
-  }
+  // if (isPerson) {
+  //   return res.status(400).json({
+  //     error: 'name must be unique'
+  //   })
+  // }
 
-  const person = {
-    id: generateId(),
+  const person = new Person({
     name: body.name,
     number: body.number
-  }
+  })
 
-  persons = persons.concat(person)
-  res.json(person)
+  person.save().then(savedPerson => {
+    res.json(savedPerson)
+  })
 })
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  
 })
